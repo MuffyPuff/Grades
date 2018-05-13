@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget* parent) :
 	ui->setupUi(this);
 
 	entryLayout = dynamic_cast<QVBoxLayout*>(ui->lines->layout());
+	this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
 	connect(ui->addEntry_b, &QPushButton::clicked,
 	        this,           &MainWindow::addEntry);
