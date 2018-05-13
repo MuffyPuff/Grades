@@ -74,8 +74,6 @@ class MainWindow : public QMainWindow
 
 		QSpinBox* grade_sb;
 
-		void editName();
-
 		void showGradeSB();
 		void addGradeSB();
 		void editGradeSB();
@@ -94,7 +92,9 @@ public:
 
 private slots:
 	void            addEntry();
-	void            editEntry();
+	void            editEntry(entry_t* e);
+	void            editName();
+
 
 private:
 	Ui::MainWindow* ui;

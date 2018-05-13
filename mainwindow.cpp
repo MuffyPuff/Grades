@@ -4,6 +4,7 @@
 #include <QPushButton>
 
 #include <QDebug>
+#include <QSignalMapper>
 
 MainWindow::MainWindow(QWidget* parent) :
         QMainWindow(parent),
@@ -31,6 +32,18 @@ void
 MainWindow::addEntry()
 {
 	entry_t* e = new entry_t(ui->name_v->text());
+
+	connect(e->box, &QGroupBox::customContextMenuRequested,
+	        this,   [ = ] { editEntry(e); });
+
+
+//	QSignalMapper* signalMapper = new QSignalMapper(this);
+//	connect(e->box,       &QGroupBox::customContextMenuRequested,
+//	        signalMapper, &QSignalMapper::map);
+//	signalMapper->setMapping(e->box, e);
+//	connect(signalMapper, &QSignalMapper::mapped(entry_t*),
+//	        this,         &MainWindow::editEntry(entry_t*));
+
 	entries.append(e);
 
 //	e->addGrade(2);
@@ -43,9 +56,9 @@ MainWindow::addEntry()
 }
 
 void
-MainWindow::editEntry()
+MainWindow::editEntry(entry_t* e)
 {
-	Q_UNIMPLEMENTED();
+	e->setName(ui->name_v->text());
 }
 
 MainWindow::entry_t::entry_t(const QString& _n)
@@ -87,9 +100,6 @@ MainWindow::entry_t::entry_t(const QString& _n)
 	        this,       &entry_t::showGradeSB);
 
 	box->setContextMenuPolicy(Qt::CustomContextMenu);
-
-	connect(box,  &QGroupBox::customContextMenuRequested,
-	        this, &entry_t::editName);
 }
 
 MainWindow::entry_t::~entry_t()
@@ -106,9 +116,8 @@ MainWindow::entry_t::~entry_t()
 }
 
 void
-MainWindow::entry_t::editName()
+MainWindow::editName()
 {
-	qDebug() << "test";
 }
 
 void
