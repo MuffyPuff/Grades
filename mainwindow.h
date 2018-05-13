@@ -37,10 +37,10 @@ signals:
 protected:
 	void mousePressEvent(QMouseEvent* event)
 	{
-		Q_UNUSED(event);
-		emit clicked();
+		if (event->button() == Qt::LeftButton) {
+			emit clicked();
+		}
 	}
-
 };
 
 
