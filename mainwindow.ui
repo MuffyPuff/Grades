@@ -44,6 +44,9 @@
        </spacer>
       </item>
       <item>
+       <widget class="QLineEdit" name="name_v"/>
+      </item>
+      <item>
        <widget class="QPushButton" name="addEntry_b">
         <property name="minimumSize">
          <size>
