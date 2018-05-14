@@ -6,6 +6,13 @@
 #include <QDebug>
 #include <QSignalMapper>
 
+#include <algorithm>
+
+#define ALL(c) (c).begin(),(c).end()
+#define IN(x, c) (find(c.begin(), c.end(), x) != (c).end())
+#define REP(i, n) for (int i = 0; i < (int)(n); ++i)
+#define FOR(i, a, b) for (int i = (a); i <= (b); ++i)
+
 MainWindow::MainWindow(QWidget* parent) :
         QMainWindow(parent),
         ui(new Ui::MainWindow)
@@ -35,6 +42,9 @@ MainWindow::addEntry()
 
 	connect(e->box, &QGroupBox::customContextMenuRequested,
 	        this,   [ = ] { editEntry(e); });
+	connect(e,      &entry_t::gradeUpdated,
+	        this,   &MainWindow::updateGrades,
+	        Qt::QueuedConnection);
 
 
 //	QSignalMapper* signalMapper = new QSignalMapper(this);
@@ -61,7 +71,7 @@ MainWindow::editEntry(entry_t* e)
 	e->setName(ui->name_v->text());
 }
 
-MainWindow::entry_t::entry_t(const QString& _n)
+entry_t::entry_t(const QString& _n)
         : name(_n), num(0), sum(0),
           avg(1), final(1)
 {
@@ -102,7 +112,7 @@ MainWindow::entry_t::entry_t(const QString& _n)
 	box->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-MainWindow::entry_t::~entry_t()
+entry_t::~entry_t()
 {
 	delete box;
 	if (addGrade_b != nullptr) {
@@ -121,7 +131,47 @@ MainWindow::editName()
 }
 
 void
-MainWindow::entry_t::showGradeSB()
+MainWindow::updateGrades()
+{
+//	qDebug() << "test";
+	QList<grade_t> grades;
+	avg = 0;
+	for (auto& el : entries) {
+		avg += el->avg;
+		grades.append(el->final);
+	}
+	avg /= entries.size();
+
+//	qSort(grades);
+//	std::sort(grades.begin(), grades.end());
+	std::sort(ALL(grades));
+	qint8 cnt[6];
+	cnt[5] = grades.count(5);
+	cnt[4] = grades.count(4);
+	cnt[3] = grades.count(3);
+	cnt[2] = grades.count(2);
+	cnt[1] = grades.count(1);
+	cnt[0] = grades.size();
+
+	if (cnt[1] > 0) {
+		gpa = 1;
+	} else if (cnt[5] >= cnt[0] / 2 and cnt[3] <= 1 and cnt[2] == 0) {
+		gpa = 5;
+	} else if (cnt[5] + cnt[4] >=  cnt[0] / 2 and cnt[2] <= 1) {
+		gpa = 4;
+	} else if (cnt[5] + cnt[4] + cnt[3] >=  cnt[0] / 2) {
+		gpa = 3;
+	} else {
+		gpa = 2;
+	}
+
+	ui->gpa_v->setText(QString::number(gpa));
+	ui->avg_v->setText(QString::number(avg, 'g', 3));
+
+}
+
+void
+entry_t::showGradeSB()
 {
 	if (grade_sb != nullptr) {
 		delete grade_sb;
@@ -146,7 +196,7 @@ MainWindow::entry_t::showGradeSB()
 }
 
 void
-MainWindow::entry_t::addGradeSB()
+entry_t::addGradeSB()
 {
 	addGrade(grade_sb->value());
 
@@ -159,7 +209,7 @@ MainWindow::entry_t::addGradeSB()
 }
 
 void
-MainWindow::entry_t::editGradeSB()
+entry_t::editGradeSB()
 {
 	if (grade_sb != nullptr) {
 		//                              grade_sb->hide();
@@ -191,7 +241,7 @@ MainWindow::entry_t::editGradeSB()
 }
 
 void
-MainWindow::entry_t::saveGradeSB()
+entry_t::saveGradeSB()
 {
 	editGrade(gradesBox->indexOf(grade_sb), grade_sb->value());
 
@@ -215,7 +265,7 @@ MainWindow::entry_t::saveGradeSB()
 }
 
 void
-MainWindow::entry_t::addGrade(const MainWindow::grade_t& grade)
+entry_t::addGrade(const grade_t& grade)
 {
 	grades.append(grade);
 	sum += grade;
@@ -226,10 +276,12 @@ MainWindow::entry_t::addGrade(const MainWindow::grade_t& grade)
 
 	final_l->setText(QString::number(final));
 	avg_l->setText(QString::number(avg, 'g', 3));
+
+	emit gradeUpdated();
 }
 
 void
-MainWindow::entry_t::removeGrade(const int& index)
+entry_t::removeGrade(const int& index)
 {
 	grades.removeAt(index);
 	sum -= grades.at(index);
@@ -239,12 +291,15 @@ MainWindow::entry_t::removeGrade(const int& index)
 
 	final_l->setText(QString::number(final));
 	avg_l->setText(QString::number(avg, 'g', 3));
+
+
+	emit gradeUpdated();
 }
 
 void
-MainWindow::entry_t::editGrade(
+entry_t::editGrade(
         const int& index,
-        const MainWindow::grade_t& to)
+        const grade_t& to)
 {
 	sum -= grades.at(index);
 	sum += to;
@@ -254,17 +309,19 @@ MainWindow::entry_t::editGrade(
 
 	final_l->setText(QString::number(final));
 	avg_l->setText(QString::number(avg, 'g', 3));
+
+	emit gradeUpdated();
 }
 
 void
-MainWindow::entry_t::setName(const QString& _n)
+entry_t::setName(const QString& _n)
 {
 	name = _n;
 	box->setTitle(name);
 }
 
 void
-MainWindow::entry_t::drawGrade(const MainWindow::grade_t& grade)
+entry_t::drawGrade(const grade_t& grade)
 {
 	MufLabel* l = new MufLabel(QString::number(grade));
 	l->setFrameStyle(QFrame::StyledPanel);
